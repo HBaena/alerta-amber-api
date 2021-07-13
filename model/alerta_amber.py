@@ -11,7 +11,12 @@ class AlertaAmber(Model):
     def __init__(self, pool):
         super(AlertaAmber, self).__init__(pool)
         self.pool = pool
-
+        self.missing_person_table = 'extraviado'
+        self.suspect_table = 'public."SOSPECHOSO"'
+        self.person_table = 'persona'
+        self.user_table = 'usuario'
+        self.photos_table = 'foto'
+        self.report_table = 'extravio'
 
     def create_person(self, data: dict, **kwargs) -> Union[int, None]:
         query = """
@@ -194,8 +199,8 @@ class AlertaAmber(Model):
                 "fecha", "estado", "municipio", "colonia", "coord", "descripcion_vestimenta", 
                 "descripcion_hechos", "localizado", "carpeta_investigacion"
             ) VALUES (
-                %(fecha)s, %(estado)s, %(municipio)s, %(colonia)s, %(coord)s, %(descripcion_vestimenta)s, 
-                %(descripcion_hechos)s, %(localizado)s, %(carpeta_investigacion)s
+                %(fecha)s, %(estado)s, %(municipio)s, %(colonia)s, public.ST_GeomFromText('POINT(%(COORD_X)s %(COORD_Y)s)', 4326), 
+                %(descripcion_vestimenta)s, %(descripcion_hechos)s, %(localizado)s, %(carpeta_investigacion)s
             ) RETURNING "extravio_id"
         """.format(self.report_table)
         return self.execute(query, data, commit=True, formatting=lambda response: response[0][0],**kwargs)
@@ -205,7 +210,7 @@ class AlertaAmber(Model):
             SELECT 
                 nombre, ap_paterno, ap_materno, to_char(age(current_date, e2.fecha), 'YY años "y" MM meses'), 
                 to_char(e2.fecha, 'DD/MM/YYYY'), e2.estado, e2.municipio, e2.colonia,
-                e2.carpeta_investigacion, f.url_foto
+                e2.carpeta_investigacion, f.url_foto, e2.extravio_id
             FROM persona p 
             LEFT JOIN extraviado e ON e.persona_id=p.persona_id
             LEFT JOIN extravio e2 ON e2.extravio_id=e.extravio_id
@@ -215,5 +220,16 @@ class AlertaAmber(Model):
         """
         columns = ("NOMBRE", "AP_PATERNO", "AP_MATERNO", "EDAD", 
                 "FECHA EXTRAVIO", "ESTADO EXTRAVIO", "MUNICIPIO EXTRAVIO", "COLONIA EXTRAVIO",
-                "CARPETA_INVESTIGACION", "URL_FOTO")
+                "CARPETA_INVESTIGACION", "URL_FOTO", "EXTRAVIO_ID")
         return self.execute(query, (idx, person_type), formatting=lambda response: response_to_dict(response, columns), **kwargs)
+
+    def create_alerta(self, data):
+        query = """
+            INSERT INTO alerta_localizacion (
+                "extravio_id", "coord", "cloud_rf_id", "usuario_id", "foto_consulta", "probabilidad", 
+            ) VALUES (
+                %(extravio_id)s, public.ST_GeomFromText('POINT(%(COORD_X)s %(COORD_Y)s)', 4326), 
+                %(cloud_rf_id)s, %(usuario_id)s, %(foto_consulta)s, %(probabilidad)s, 
+            ) RETURNING "alerta_id"
+        """
+        return self.execute(query, data, commit=True, formatting=lambda response:response[0][0], **kwargs)

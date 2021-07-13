@@ -24,6 +24,7 @@ class DBErrorMsg():
     ID_ERROR = 'id_not_exists_in_db'
 
 class SuccessMsg():
+    SENT = 'sent_message'
     CREATED = 'created_successfully'
     READED = 'read_successfully'
     UPDATED = 'updated_successfully'
@@ -33,3 +34,7 @@ class SuccessMsg():
 class PersonType():
     MISSING_PERSON = 0
     SUSPECT = 1
+
+class FaceRecognitionMsg():
+    COINCIDENCE = "possible_coincidence"
+    NO_COINCIDENCE = "no_coincidence"

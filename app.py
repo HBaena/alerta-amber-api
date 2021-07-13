@@ -18,6 +18,7 @@ from model.enums import DBErrorMsg
 from model.enums import RouteErrorMsg
 from model.enums import SuccessMsg
 from model.enums import PersonType
+from model.enums import FaceRecognitionMsg
 
 from typing import Any, NoReturn
 
@@ -146,14 +147,15 @@ class User(Resource):
         Php endpoint: datos_usuario_get
         Returns: Data in json format   
         """
-        email = request.args.get('email', False)
+        email = request.args.get('email')
         if not email:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('email'))
         
         user = user_model.read_user(email)
         if not user:
-            return jsonify(dict(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.USER_NOT_EXISTS))
-
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.USER_NOT_EXISTS)
+        user = user.pop()
+        del user['CONTRASENA']
         return jsonify(status=StatusMsg.OK, message=SuccessMsg.READED, data=user)
 
     def post(self):
@@ -170,12 +172,14 @@ class User(Resource):
             'nombre': form.get('nombre'), 
             'no_empleado': form.get('no_empleado', 1), 
             'contrasena': form.get('contrasena'), 
+            'zona': form.get('contrasena', 0), 
+            'notificaciones_device_id': form.get('notificaciones_device_id'), 
         }
         # TODO: verify nulls
         user = user_model.read_user(data['email'])
         if user:
             return jsonify(status=StatusMsg.FAIL, message=DBErrorMsg.USER_EXISTS, error=ErrorMsg.DB_ERROR)
-        data['contrasena'] = encript_password(data['contrasena'])
+        data['contrasena'] = encript_password(data['contrasena'])  # password 
         user_id = user_model.create_user(data)
         if not user_id:
             return dict(status=StatusMsg.FAIL, message=DBErrorMsg.CREATING_ERROR, error=ErrorMsg.DB_ERROR)
@@ -205,7 +209,7 @@ class Token(Resource):
 
 
 class Login(Resource):
-    def post(self, user_type: str):
+    def post(self):
         """
         Function: post
         Summary: Login user
@@ -222,9 +226,10 @@ class Login(Resource):
         if not user:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.USER_NOT_EXISTS)
         user = user[0]
-        if verify_password(user['contrasena'], data['contrasena']):
+        if verify_password(user['CONTRASENA'], data['contrasena']):
             access_token = create_access_token(identity=data['email'])
             refresh_token = create_refresh_token(identity=data['email'])
+            del user['CONTRASENA']
             return jsonify(status=StatusMsg.OK, message='Login successfully', user_data=user,
                     access_token=access_token, refresh_token=refresh_token)
         else:
@@ -398,21 +403,80 @@ class FaceRecognition(Resource):
         """
         photo = request.files.get('foto').read()
         deep = request.form.get('deep')
+        coord = request.form.get('coord')
+        usuario_id = request.form.get('usuario_id')
+
+        data = defaultdict(lambda: None)
+        if coord:
+            x, y = coord.split(',')
+            data['COORD_X'] =  y
+            data['COORD_Y'] =  x
+        data['usuario_id'] = usuario_id
+
         if not photo:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto'))
+        
         fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
-        coincidences = fr_service.recognize(photo, deep=bool(deep))
-        ic(coincidences)
+
+        coincidences = fr_service.recognize(photo, deep=bool(deep))        
         if not coincidences:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=DBErrorMsg.CREATING_ERROR)
+        
         coincidences = filter(lambda item: item['name'].split("/")[0].isdigit(), coincidences)
+        if not coincidences:
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NO_COINCIDENCE)
+
         connection = aa_model.get_connection()
         cursor = connection.cursor()
-        response = tuple(aa_model.get_coincidences_info(
-            *coincidence['name'].split('/'), cursor_=cursor) for coincidence in coincidences)
+        response = list()
+        data = dict()
+        for coincidence in coincidences:
+            data['cloud_rf_id'] = coincidence['id']
+            data['probabilidad'] = coincidence['probability']
+            temp = aa_model.get_coincidences_info(*coincidence['name'].split('/'), cursor_=cursor)
+            data['foto_consulta'] = photo
+            data['extravio_id'] = temp['EXTRAVIO_ID']
+            
+            response.append(temp)
         aa_model.release_connection(connection)
-        return jsonify(status=StatusMsg.OK, coincidences=response, message=SuccessMsg.FOUND)
 
+        return jsonify(status=StatusMsg.OK, coincidences=response, message=FaceRecognitionMsg.COINCIDENCE)
+
+
+class Notification(Resource):
+
+    def get(self):
+        ...
+    #     TODO
+    #     args = request.args
+    #     type_ = args.get('user_type')
+    #     idx = args.get('id')
+    #     if type_ == 'pl':
+    #         response = d911_cripto_model.notification_id_sm(idx)
+    #     elif type_ == 'sm': 
+    #         response = d911_cripto_model.notification_id_pl(idx)
+    #     elif type_ == 'cn': 
+    #         response = user_model.notification_id_cn(idx)
+    #     else:
+    #         return jsonify(estatus="fail", error="type needed")
+    #     return jsonify(estatus="good", data=response)
+
+    def post(self):
+        """
+        Function: post
+        Summary: Send notifications by tags or ids
+        """
+        data = request.get_json()
+        mode = data.get("mode", None)
+        #ic(mode)
+        #ic(data)
+        if mode == 'tags':
+            code = notification_manager.send_notification_tag_base(data)
+        elif mode == "idx":
+            code = notification_manager.send_notification_idx_base(data)
+        else:
+            return dict(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('mode [tags, idx]'))
+        return jsonify(status=StatusMsg.OK, message=SuccessMsg.SENT, status_code=code)
 
 
 
@@ -423,3 +487,4 @@ api.add_resource(Login, '/alerta-amber/user/login/')
 api.add_resource(Report, '/alerta-amber/reporte/')
 api.add_resource(Person, '/alerta-amber/persona/<string:person_type>')
 api.add_resource(FaceRecognition, '/alerta-amber/face-recognition')
+

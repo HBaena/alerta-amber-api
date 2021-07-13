@@ -22,6 +22,6 @@ api = Api(app)  # Creating API object from flask app
 app.config['JWT_SECRET_KEY'] = 'Officiautlaboreincididunttemportemporsedauteexcepteurdoloreirure dolor.'
 app.config['JWT_PUBLIC_KEY'] = 'Proidentin.Exconsectetur.Dolorauteincididuntreprehenderit.'
 app.config['JWT_PRIVATE_KEY'] = 'Quinisiculpaveniam.Doloramet.Ullamcoinoccaecatofficiaquis.'
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=7)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 jwt = JWTManager(app)

@@ -7,12 +7,6 @@ logging.basicConfig(filename='model.log', level=logging.ERROR)
 class Model:
     def __init__(self, pool):
         self.pool = pool
-        self.missing_person_table = 'extraviado'
-        self.suspect_table = 'public."SOSPECHOSO"'
-        self.person_table = 'persona'
-        self.user_table = 'public."USUARIO"'
-        self.photos_table = 'foto'
-        self.report_table = 'extravio'
 
     def get_connection(self, autocommit=False):
         try:

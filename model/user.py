@@ -13,14 +13,14 @@ class User(Model):
     def __init__(self, pool):
         super(User, self).__init__(pool)
         self.pool = pool
-
+        self.user_table = 'usuario'
 
     def read_user(self, email: str) -> Union[None, tuple]:
         query = """
             SELECT * FROM {}
             WHERE "email"=%s
         """.format(self.user_table)
-        columns = ('USUARIO_ID', 'EMAIL', 'TELEFONO', 'NOMBRE', 'NO EMPLEADO', 'CONTRASENA')
+        columns = ('USUARIO_ID', 'EMAIL', 'TELEFONO', 'NOMBRE', 'NO EMPLEADO', 'CONTRASENA', 'ZONA', 'NOTIFICACIONES_DEVICE_ID', 'ROL')
 
         return self.execute(
                 query, (email,), commit=True, 
@@ -38,9 +38,9 @@ class User(Model):
                 %(email)s, %(telefono)s, %(nombre)s, 
                 %(no_empleado)s, %(contrasena)s
             )
-            RETURNING "user_id"
+            RETURNING "usuario_id"
         """.format(self.user_table)
-        return response[0][0] if (response := self.execute(query, data, commit=True)) else None 
+        return  self.execute(query, data, commit=True, formatting=lambda response: response[0][0])
             
             
     def jwt_update(self, jwt_token_old: str, jwt_token_new: str) -> int:
