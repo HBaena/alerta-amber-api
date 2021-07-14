@@ -212,6 +212,16 @@ class User(Resource):
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.ID_ERROR)
 
 
+class Users(Resource):
+    def get(self):
+        zone = request.args.get('zona')
+        response = user_model.read_users_by_zone(zone)
+        if response:
+            return jsonify(status=StatusMsg.OK, message=SuccessMsg.READED, data=response)
+        else:
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.NO_EXISTS_INFO)
+
+
 class Token(Resource):
     @jwt_required(refresh=True)
     def post(self):
@@ -509,6 +519,7 @@ class Notification(Resource):
 
 api.add_resource(Index, '/alerta-amber/')
 api.add_resource(User, '/alerta-amber/user/')
+api.add_resource(Users, '/alerta-amber/users/list')
 api.add_resource(Token, '/alerta-amber/user/refresh-token/')
 api.add_resource(Login, '/alerta-amber/user/login/')
 api.add_resource(Report, '/alerta-amber/reporte/')
