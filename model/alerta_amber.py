@@ -221,15 +221,15 @@ class AlertaAmber(Model):
         columns = ("NOMBRE", "AP_PATERNO", "AP_MATERNO", "EDAD", 
                 "FECHA EXTRAVIO", "ESTADO EXTRAVIO", "MUNICIPIO EXTRAVIO", "COLONIA EXTRAVIO",
                 "CARPETA_INVESTIGACION", "URL_FOTO", "EXTRAVIO_ID")
-        return self.execute(query, (idx, person_type), formatting=lambda response: response_to_dict(response, columns), **kwargs)
+        return self.execute(query, (idx, person_type), formatting=lambda response: response_to_dict(response, columns)[0], **kwargs)
 
-    def create_alerta(self, data):
+    def create_alert(self, data, **kwargs):
         query = """
             INSERT INTO alerta_localizacion (
-                "extravio_id", "coord", "cloud_rf_id", "usuario_id", "foto_consulta", "probabilidad", 
+                "extravio_id", "coord", "cloud_rf_id", "usuario_id", "foto_consulta", "probabilidad" 
             ) VALUES (
                 %(extravio_id)s, public.ST_GeomFromText('POINT(%(COORD_X)s %(COORD_Y)s)', 4326), 
-                %(cloud_rf_id)s, %(usuario_id)s, %(foto_consulta)s, %(probabilidad)s, 
+                %(cloud_rf_id)s, %(usuario_id)s, %(foto_consulta)s, %(probabilidad)s
             ) RETURNING "alerta_id"
         """
         return self.execute(query, data, commit=True, formatting=lambda response:response[0][0], **kwargs)

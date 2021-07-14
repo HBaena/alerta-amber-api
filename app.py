@@ -190,6 +190,28 @@ class User(Resource):
             )
 
 
+    def patch(self):
+        """
+        Function: patch
+        Summary: Update partially an user (rango edad, educacion, genero)
+        Php endpoint: update_datos_usuario_post
+        Returns: estatus
+        """
+        data = request.form
+        data_db = {
+            'usuario_id':  data.get('usuario_id'),
+            'notificaciones_device_id':  data.get('notificaciones_device_id')
+        }
+        if not data_db['usuario_id']:
+            return jsonify(status=StatusMsg.FAIL, message=ErrorMsg.NEEDED_VALUES.format("usuario_id, notificaciones_device_id"), 
+                error=ErrorMsg.MISSING_VALUES)
+
+        if user_model.update_notification_id(data_db):
+            return dict(status=StatusMsg.OK, message=SuccessMsg.UPDATED)
+        else:
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.ID_ERROR)
+
+
 class Token(Resource):
     @jwt_required(refresh=True)
     def post(self):
@@ -409,8 +431,8 @@ class FaceRecognition(Resource):
         data = defaultdict(lambda: None)
         if coord:
             x, y = coord.split(',')
-            data['COORD_X'] =  y
-            data['COORD_Y'] =  x
+            data['COORD_X'] =  float(y)
+            data['COORD_Y'] =  float(x)
         data['usuario_id'] = usuario_id
 
         if not photo:
@@ -429,22 +451,27 @@ class FaceRecognition(Resource):
         connection = aa_model.get_connection()
         cursor = connection.cursor()
         response = list()
-        data = dict()
         for coincidence in coincidences:
             data['cloud_rf_id'] = coincidence['id']
             data['probabilidad'] = coincidence['probability']
             temp = aa_model.get_coincidences_info(*coincidence['name'].split('/'), cursor_=cursor)
             data['foto_consulta'] = photo
             data['extravio_id'] = temp['EXTRAVIO_ID']
+            ic(aa_model.create_alert(data, cursor_=cursor))
             
             response.append(temp)
+        connection.commit()
         aa_model.release_connection(connection)
 
         return jsonify(status=StatusMsg.OK, coincidences=response, message=FaceRecognitionMsg.COINCIDENCE)
 
 
-class Notification(Resource):
+class Alerts(Resource):
+    def get(self):
+        ...
 
+
+class Notification(Resource):
     def get(self):
         ...
     #     TODO
@@ -487,4 +514,4 @@ api.add_resource(Login, '/alerta-amber/user/login/')
 api.add_resource(Report, '/alerta-amber/reporte/')
 api.add_resource(Person, '/alerta-amber/persona/<string:person_type>')
 api.add_resource(FaceRecognition, '/alerta-amber/face-recognition')
-
+api.add_resource(Notification, '/alerta-amber/notifications/')
