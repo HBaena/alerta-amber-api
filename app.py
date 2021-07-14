@@ -81,6 +81,7 @@ def initialize() -> NoReturn:
     Returns: Nothing
     """
     # from pathlib import Path
+    ic()
     global pool, user_model, aa_model
 
     pool = connect_to_db_from_json("connection.json")
@@ -215,7 +216,8 @@ class User(Resource):
 class Users(Resource):
     def get(self):
         zone = request.args.get('zona')
-        response = user_model.read_users_by_zone(zone)
+        rol = request.args.get('rol')
+        response = user_model.read_users_by_zone(zone, rol)
         if response:
             return jsonify(status=StatusMsg.OK, message=SuccessMsg.READED, data=response)
         else:
@@ -423,12 +425,13 @@ class Report(Resource):
         """
         ...
 
+
 class FaceRecognition(Resource):
 
     def post(self):
         """
         Function: post
-        Summary: Search face into db
+        Summary: Search face into db`
         dataform:
             foto: file
             deep: bool 
@@ -436,7 +439,6 @@ class FaceRecognition(Resource):
         deep = request.form.get('deep', True)
         coord = request.form.get('coord')
         usuario_id = request.form.get('usuario_id')
-
         data = defaultdict(lambda: None)
         if coord:
             x, y = coord.split(',')
@@ -454,12 +456,11 @@ class FaceRecognition(Resource):
 
         coincidences = fr_service.recognize(photo, deep=bool(deep))        
         if not coincidences:
-            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=DBErrorMsg.CREATING_ERROR)
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NO_COINCIDENCE)
         
-        coincidences = filter(lambda item: item['name'].split("/")[0].isdigit(), coincidences)
+        coincidences = tuple(filter(lambda item: item['name'][0].isdigit(), coincidences))
         if not coincidences:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NO_COINCIDENCE)
-
         connection = aa_model.get_connection()
         cursor = connection.cursor()
         response = list()
@@ -469,6 +470,7 @@ class FaceRecognition(Resource):
             temp = aa_model.get_coincidences_info(*coincidence['name'].split('/'), cursor_=cursor)
             data['foto_consulta'] = photo
             data['extravio_id'] = temp['EXTRAVIO_ID']
+            data['fecha'] = datetime.today()
             ic(aa_model.create_alert(data, cursor_=cursor))
             response.append(temp)
         connection.commit()
@@ -485,10 +487,13 @@ class Alerts(Resource):
         }
         response = aa_model.read_alerts_by_zone(data)
         if not response: 
-            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=Erro.NO_EXISTS_INFO)
-        return response
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.NO_EXISTS_INFO)
+        fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
         for coincidence in response:
-            ...
+            ic(coincidence['cloud_rf_id'])
+            coincidence['fotos_db'] = fr_service.list_person_faces(coincidence['cloud_rf_id'])
+
+        return jsonify(status=StatusMsg.OK, message=SuccessMsg.READED, data=response)
 
 
 class Notification(Resource):
@@ -529,11 +534,11 @@ class Notification(Resource):
 
 api.add_resource(Index, '/alerta-amber/')
 api.add_resource(User, '/alerta-amber/user/')
-api.add_resource(Users, '/alerta-amber/users/list')
+api.add_resource(Users, '/alerta-amber/users/list/')
 api.add_resource(Token, '/alerta-amber/user/refresh-token/')
 api.add_resource(Login, '/alerta-amber/user/login/')
 api.add_resource(Report, '/alerta-amber/reporte/')
 api.add_resource(Person, '/alerta-amber/persona/<string:person_type>')
-api.add_resource(FaceRecognition, '/alerta-amber/face-recognition')
+api.add_resource(FaceRecognition, '/alerta-amber/face-recognition/')
 api.add_resource(Notification, '/alerta-amber/notifications/')
 api.add_resource(Alerts, '/alerta-amber/list/')

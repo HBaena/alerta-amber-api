@@ -64,14 +64,14 @@ class User(Model):
         return self.execute(query, data, commit=True, **kwargs)
 
 
-    def read_users_by_zone(self, zone: str) -> Union[None, tuple]:
+    def read_users_by_zone(self, zone: int, rol: int) -> Union[None, tuple]:
         query = """
             SELECT 
                 "usuario_id", "email", "telefono", "nombre", "no_empleado", 
                 "zona", "notificaciones_device_id", "rol" 
             FROM {}
-            WHERE zona=%s
-        """.format(self.user_table)
+            WHERE zona=%s {}
+        """.format(self.user_table, f"AND rol={rol}" if rol else "")
         columns = ('USUARIO_ID', 'EMAIL', 'TELEFONO', 'NOMBRE', 'NO EMPLEADO', 'ZONA', 'NOTIFICACIONES_DEVICE_ID', 'ROL')
 
         return self.execute(
