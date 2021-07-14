@@ -526,12 +526,12 @@ class Notification(Resource):
         ic(data)
         if mode == 'tags':
             ic()
-            code = notification_manager.send_notification_tag_base(data)
+            code, _json = notification_manager.send_notification_tag_base(data)
         elif mode == "idx":
-            code = notification_manager.send_notification_idx_base(data)
+            code, _json = notification_manager.send_notification_idx_base(data)
         else:
             return dict(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('mode [tags, idx]'))
-        return jsonify(status=StatusMsg.OK, message=SuccessMsg.SENT, status_code=code)
+        return jsonify(status=StatusMsg.OK, message=SuccessMsg.SENT, status_code=code, response=_json)
 
 
 
