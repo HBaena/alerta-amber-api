@@ -54,3 +54,11 @@ class User(Model):
             return response[0][0]
         else:
             return False 
+
+
+    def update_notification_id(self, data, **kwargs):
+        query = """
+            UPDATE {} SET notificaciones_device_id=%(notificaciones_device_id)s
+            WHERE usuario_id=%(usuario_id)s
+        """.format(self.user_table)
+        return self.execute(query, data, commit=True, **kwargs)
