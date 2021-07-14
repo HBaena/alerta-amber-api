@@ -65,7 +65,7 @@ class AlertaAmber(Model):
         query = """
             SELECT p.*, f.url_foto FROM persona p 
             left join registro_rf rr on rr.persona_id=p.persona_id
-            left join foto f on f.registro_rf_id=rr.registro_rf_id 
+            left join foto f on f.registro_rf_id=rr.registro_rf_id
             WHERE p.persona_id = %s and rr.tipo=0 limit 1
         """
         columns = (
@@ -199,7 +199,8 @@ class AlertaAmber(Model):
                 "fecha", "estado", "municipio", "colonia", "coord", "descripcion_vestimenta", 
                 "descripcion_hechos", "localizado", "carpeta_investigacion"
             ) VALUES (
-                %(fecha)s, %(estado)s, %(municipio)s, %(colonia)s, public.ST_GeomFromText('POINT(%(COORD_X)s %(COORD_Y)s)', 4326), 
+                %(fecha)s, %(estado)s, %(municipio)s, %(colonia)s, 
+                public.ST_GeomFromText('POINT(%(COORD_X)s %(COORD_Y)s)', 4326), 
                 %(descripcion_vestimenta)s, %(descripcion_hechos)s, %(localizado)s, %(carpeta_investigacion)s
             ) RETURNING "extravio_id"
         """.format(self.report_table)
@@ -210,17 +211,16 @@ class AlertaAmber(Model):
             SELECT 
                 nombre, ap_paterno, ap_materno, to_char(age(current_date, e2.fecha), 'YY años "y" MM meses'), 
                 to_char(e2.fecha, 'DD/MM/YYYY'), e2.estado, e2.municipio, e2.colonia,
-                e2.carpeta_investigacion, f.url_foto, e2.extravio_id
+                e2.carpeta_investigacion, e2.extravio_id, p.persona_id
             FROM persona p 
             LEFT JOIN extraviado e ON e.persona_id=p.persona_id
             LEFT JOIN extravio e2 ON e2.extravio_id=e.extravio_id
             LEFT JOIN registro_rf rr ON rr.persona_id=p.persona_id
-            LEFT JOIN foto f ON f.registro_rf_id=rr.registro_rf_id 
             WHERE p.persona_id=%s AND rr.tipo=%s LIMIT 1
         """
         columns = ("NOMBRE", "AP_PATERNO", "AP_MATERNO", "EDAD", 
                 "FECHA EXTRAVIO", "ESTADO EXTRAVIO", "MUNICIPIO EXTRAVIO", "COLONIA EXTRAVIO",
-                "CARPETA_INVESTIGACION", "URL_FOTO", "EXTRAVIO_ID")
+                "CARPETA_INVESTIGACION", "EXTRAVIO_ID", "PERSONA_ID")
         return self.execute(query, (idx, person_type), formatting=lambda response: response_to_dict(response, columns)[0], **kwargs)
 
     def create_alert(self, data, **kwargs):
@@ -255,7 +255,6 @@ class AlertaAmber(Model):
             WHERE u.zona = %(zone)s OR %(all)s
             ORDER BY e.fecha DESC
         """ 
-
         columns = (
                 "alerta_id",  "lat_consulta",  "lng_consulta", "cloud_rf_id", 
                 "probabilidad",  "lat_extravio", "lng_extravio", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion", "extravio_id")

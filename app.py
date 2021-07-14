@@ -314,7 +314,7 @@ class Person(Resource):
         ic(form.get('foto'), form.get('nombre'), form.get('a_paterno'))
         if not all((request.files.get('foto'), form.get('nombre'), form.get('ap_paterno'))):
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto, nombre y appelido'))
-
+        ic(form)
         # DB CONNECTION
         connection = aa_model.get_connection(autocommit=False)
         if not connection:
@@ -327,7 +327,7 @@ class Person(Resource):
             connection.rollback()
             aa_model.release_connection(connection)
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CREATING_ERROR)
-
+        ic(person_id)
         # CREATE MISSING_PERSON or SUSPECT
         response = dict(status=StatusMsg.OK, message=SuccessMsg.CREATED)        
         if person_type == 'extraviado':
@@ -342,6 +342,7 @@ class Person(Resource):
                 return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CREATING_ERROR)
             response['sospechoso_id'] = sospechoso_id
 
+        ic(response)
         # RF SERVICE
         fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
 
@@ -533,6 +534,10 @@ class Notification(Resource):
             return dict(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('mode [tags, idx]'))
         return jsonify(status=StatusMsg.OK, message=SuccessMsg.SENT, status_code=code, response=_json)
 
+
+class FotoExtraviado(Resource):
+    def get(self):
+        ...
 
 
 api.add_resource(Index, '/alerta-amber/')
