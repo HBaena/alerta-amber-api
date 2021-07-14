@@ -8,6 +8,7 @@ from config import app
 from config import api
 from config import jwt
 from config import connect_to_db_from_json
+from config import init_notification_manager
 
 from model.user import User as UserModel 
 from model.alerta_amber import AlertaAmber
@@ -58,7 +59,7 @@ API_VERSION = '1.0.000'
 pool = None
 user_model = None
 aa_model = None
-
+notification_manager = None
 
 @app.after_request
 def after_request(response) -> Any:
@@ -82,12 +83,13 @@ def initialize() -> NoReturn:
     """
     # from pathlib import Path
     ic()
-    global pool, user_model, aa_model
+    global pool, user_model, aa_model, notification_manager
 
     pool = connect_to_db_from_json("connection.json")
     pool = connect_to_db_from_json("connection.json")
     user_model = UserModel(pool)
     aa_model = AlertaAmber(pool)
+    notification_manager = init_notification_manager()
     # Path(path.join(getcwd(), "temp")).mkdir(parents=True, exist_ok=True)
 
 @jwt.expired_token_loader
@@ -520,15 +522,16 @@ class Notification(Resource):
         """
         data = request.get_json()
         mode = data.get("mode", None)
-        #ic(mode)
-        #ic(data)
+        ic(mode)
+        ic(data)
         if mode == 'tags':
-            code = notification_manager.send_notification_tag_base(data)
+            ic()
+            code, _json = notification_manager.send_notification_tag_base(data)
         elif mode == "idx":
-            code = notification_manager.send_notification_idx_base(data)
+            code, _json = notification_manager.send_notification_idx_base(data)
         else:
             return dict(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('mode [tags, idx]'))
-        return jsonify(status=StatusMsg.OK, message=SuccessMsg.SENT, status_code=code)
+        return jsonify(status=StatusMsg.OK, message=SuccessMsg.SENT, status_code=code, response=_json)
 
 
 

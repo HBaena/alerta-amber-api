@@ -7,6 +7,10 @@ from psycopg2 import pool
 
 from datetime import timedelta
 from os import path, getcwd
+from notification_manager import NotificationsManager
+
+def init_notification_manager() -> NotificationsManager:
+    return NotificationsManager(path.join(getcwd(), "notifications-config.json"))
 
 def connect_to_db_from_json(filename: str) -> pool:
     return PosgresPoolConnection(path.join(getcwd(), filename))

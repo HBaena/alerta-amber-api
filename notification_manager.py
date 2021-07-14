@@ -21,13 +21,13 @@ class NotificationsManager:
     def send_notification_tag_base(self, data: dict):
         data = dict(
             app_id=self.app_id,
-            filters=data['filters'],
-            data=data['params'],
+            filters=data.get('filters'),
+            data=data.get('params'),
             contents={self.language: data["contents"]}
         )
         response = requests.post(self.url, headers=self.headers, data=json.dumps(data))
         ic(response.json())
-        return response.status_code
+        return response.status_code, response.json()
 
     def send_notification_idx_base(self, data: dict):
         data = dict(
@@ -38,4 +38,4 @@ class NotificationsManager:
         )
         response = requests.post(self.url, headers=self.headers, data=json.dumps(data))
         ic(response.json())
-        return response.status_code
+        return response.status_code, response.json()
