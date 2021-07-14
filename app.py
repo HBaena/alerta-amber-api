@@ -408,8 +408,8 @@ class Report(Resource):
         coord = form.get('coord')
         if coord:
             x, y = coord.split(',')
-            form['COORD_X'] =  y
-            form['COORD_Y'] =  x
+            form['COORD_X'] =  float(y)
+            form['COORD_Y'] =  float(x)
 
         validate_datetime_from_form(form, 'fecha')
 
