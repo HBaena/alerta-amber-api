@@ -22,6 +22,7 @@ class DBErrorMsg():
     READING_ERROR = 'error_reading_db'
     CONNECTION_ERROR = 'error_with_db_connection'
     ID_ERROR = 'id_not_exists_in_db'
+    NO_EXISTS_INFO = 'no_exists_info'
 
 class SuccessMsg():
     SENT = 'sent_message'

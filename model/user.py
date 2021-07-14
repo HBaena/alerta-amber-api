@@ -62,3 +62,18 @@ class User(Model):
             WHERE usuario_id=%(usuario_id)s
         """.format(self.user_table)
         return self.execute(query, data, commit=True, **kwargs)
+
+
+    def read_users_by_zone(self, zone: str) -> Union[None, tuple]:
+        query = """
+            SELECT 
+                "usuario_id", "email", "telefono", "nombre", "no_empleado", 
+                "zona", "notificaciones_device_id", "rol" 
+            FROM {}
+            WHERE zona=%s
+        """.format(self.user_table)
+        columns = ('USUARIO_ID', 'EMAIL', 'TELEFONO', 'NOMBRE', 'NO EMPLEADO', 'ZONA', 'NOTIFICACIONES_DEVICE_ID', 'ROL')
+
+        return self.execute(
+                query, (zone, ), commit=True, 
+                formatting=lambda response: response_to_dict(response, columns))
