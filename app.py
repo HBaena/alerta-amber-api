@@ -433,8 +433,7 @@ class FaceRecognition(Resource):
             foto: file
             deep: bool 
         """
-        photo = request.files.get('foto').read()
-        deep = request.form.get('deep')
+        deep = request.form.get('deep', True)
         coord = request.form.get('coord')
         usuario_id = request.form.get('usuario_id')
 
@@ -445,7 +444,10 @@ class FaceRecognition(Resource):
             data['COORD_Y'] =  float(x)
         data['usuario_id'] = usuario_id
 
-        if not photo:
+        if not request.files.get('foto'):
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto'))
+        photo = request.files.get('foto').read()
+        if photo == b'':
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto'))
         
         fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
@@ -468,7 +470,6 @@ class FaceRecognition(Resource):
             data['foto_consulta'] = photo
             data['extravio_id'] = temp['EXTRAVIO_ID']
             ic(aa_model.create_alert(data, cursor_=cursor))
-            
             response.append(temp)
         connection.commit()
         aa_model.release_connection(connection)
@@ -478,7 +479,16 @@ class FaceRecognition(Resource):
 
 class Alerts(Resource):
     def get(self):
-        ...
+        data = {
+            "zone": request.args.get("zona"),
+            "all": request.args.get("all", True)
+        }
+        response = aa_model.read_alerts_by_zone(data)
+        if not response: 
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=Erro.NO_EXISTS_INFO)
+        return response
+        for coincidence in response:
+            ...
 
 
 class Notification(Resource):
@@ -526,3 +536,4 @@ api.add_resource(Report, '/alerta-amber/reporte/')
 api.add_resource(Person, '/alerta-amber/persona/<string:person_type>')
 api.add_resource(FaceRecognition, '/alerta-amber/face-recognition')
 api.add_resource(Notification, '/alerta-amber/notifications/')
+api.add_resource(Alerts, '/alerta-amber/list/')

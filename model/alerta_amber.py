@@ -233,3 +233,27 @@ class AlertaAmber(Model):
             ) RETURNING "alerta_id"
         """
         return self.execute(query, data, commit=True, formatting=lambda response:response[0][0], **kwargs)
+
+
+    def read_alerts_by_zone(self, data, **kwargs):
+        query = """
+            SELECT 
+                al.alerta_id, 
+                public.ST_Y(public.ST_TRANSFORM(al.coord ,4326)), 
+                public.ST_X(public.ST_TRANSFORM(al.coord ,4326)),
+                al.cloud_rf_id, encode(al.foto_consulta , 'base64'),
+                cast(al.probabilidad AS float), 
+                public.ST_Y(public.ST_TRANSFORM(e.coord ,4326)), 
+                public.ST_X(public.ST_TRANSFORM(e.coord ,4326)),
+                to_char(e.fecha, 'DD/MM/YYYY'), e.carpeta_investigacion 
+            FROM alerta_localizacion al 
+            LEFT JOIN usuario u ON u.usuario_id=al.usuario_id
+            LEFT JOIN extravio e ON e.extravio_id=al.extravio_id 
+            WHERE u.zona = %(zone)s OR %(all)s
+            ORDER BY e.fecha DESC        
+        """ 
+
+        columns = (
+                "alerta_id",  "lat_consulta",  "lng_consulta", "cloud_rf_id",  "foto_consulta", 
+                "probabilidad",  "lat_extravio", "lng_extravio", "fecha",  "carpeta_investigacion")
+        return self.execute(query, data, formatting=lambda response: response_to_dict(response, columns), **kwargs)
