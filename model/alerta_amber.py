@@ -282,4 +282,5 @@ class AlertaAmber(Model):
         """ 
         columns = ("lat_consulta",  "lng_consulta", "cloud_rf_id", "foto_consulta", 
                 "probabilidad", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion")
-        return self.execute(query, (idx, ), formatting=lambda response: response_to_dict(response, columns)[0], **kwargs)
+        return self.execute(query, (idx, ), formatting=lambda response: response_to_dict(response, columns)[0] if response else None, 
+            **kwargs)
