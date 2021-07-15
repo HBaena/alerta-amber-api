@@ -239,6 +239,7 @@ class AlertaAmber(Model):
         query = """
             SELECT 
                 al.alerta_id, 
+                p.persona_id,
                 p.nombre, p.ap_paterno, p.ap_materno,
                 public.ST_Y(public.ST_TRANSFORM(al.coord ,4326)), 
                 public.ST_X(public.ST_TRANSFORM(al.coord ,4326)),
@@ -259,7 +260,7 @@ class AlertaAmber(Model):
             ORDER BY e.fecha DESC
         """ 
         columns = (
-                "alerta_id", "nombre", "ap_paterno" , "ap_materno" ,"lat_consulta",  "lng_consulta", "cloud_rf_id", 
+                "alerta_id", "persona_id", "nombre", "ap_paterno" , "ap_materno" ,"lat_consulta",  "lng_consulta", "cloud_rf_id", 
                 "probabilidad",  "lat_extravio", "lng_extravio", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion", "extravio_id")
         return self.execute(query, data, formatting=lambda response: response_to_dict(response, columns), **kwargs)
 
