@@ -239,10 +239,11 @@ class AlertaAmber(Model):
         query = """
             SELECT 
                 al.alerta_id, 
+                p.nombre, p.ap_paterno, p.ap_materno,
                 public.ST_Y(public.ST_TRANSFORM(al.coord ,4326)), 
                 public.ST_X(public.ST_TRANSFORM(al.coord ,4326)),
                 al.cloud_rf_id,
-                cast(al.probabilidad AS float), 
+                cast(al.probabilidad*100 AS float), 
                 public.ST_Y(public.ST_TRANSFORM(e.coord ,4326)), 
                 public.ST_X(public.ST_TRANSFORM(e.coord ,4326)),
                 to_char(e.fecha, 'DD/MM/YYYY HH:MI:SS'), 
@@ -252,11 +253,13 @@ class AlertaAmber(Model):
             FROM alerta_localizacion al 
             LEFT JOIN usuario u ON u.usuario_id=al.usuario_id
             LEFT JOIN extravio e ON e.extravio_id=al.extravio_id 
+            LEFT JOIN extraviado e2 ON e2.extravio_id=e.extravio_id 
+            LEFT JOIN persona p ON p.persona_id=e2.persona_id 
             WHERE u.zona = %(zone)s OR %(all)s
             ORDER BY e.fecha DESC
         """ 
         columns = (
-                "alerta_id",  "lat_consulta",  "lng_consulta", "cloud_rf_id", 
+                "alerta_id", "nombre", "ap_paterno" , "ap_materno" ,"lat_consulta",  "lng_consulta", "cloud_rf_id", 
                 "probabilidad",  "lat_extravio", "lng_extravio", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion", "extravio_id")
         return self.execute(query, data, formatting=lambda response: response_to_dict(response, columns), **kwargs)
 
