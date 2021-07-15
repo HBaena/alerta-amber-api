@@ -77,7 +77,7 @@ class FaceRecognitionService:
     @_validate_response    
     def list_person_faces(self, idx: int) -> dict:
         url = f"{self.urls['list_persons']}/{idx}"
-        response = requests.post(url, headers=self.headers)
+        response = requests.get(url, headers=self.headers)
         return response
 
 

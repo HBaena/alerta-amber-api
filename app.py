@@ -482,6 +482,20 @@ class FaceRecognition(Resource):
         return jsonify(status=StatusMsg.OK, coincidences=response, message=FaceRecognitionMsg.COINCIDENCE)
 
 
+class Alert(Resource):
+    def get(self):
+        idx = request.args.get('idx')
+        response = aa_model.read_alert(idx)
+        if not response:
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.NO_EXISTS_INFO)
+
+        fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
+        fr_data = fr_service.list_person_faces(response['cloud_rf_id'])
+        response['fotos_db'] = fr_data
+        return jsonify(status=StatusMsg.OK, message=SuccessMsg.READED, data=response)
+
+
+
 class Alerts(Resource):
     def get(self):
         data = {
@@ -492,9 +506,9 @@ class Alerts(Resource):
         if not response: 
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.NO_EXISTS_INFO)
         fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
-        for coincidence in response:
-            ic(coincidence['cloud_rf_id'])
-            coincidence['fotos_db'] = fr_service.list_person_faces(coincidence['cloud_rf_id'])
+        # for coincidence in response:
+        #     ic(coincidence['cloud_rf_id'])
+        #     coincidence['fotos_db'] = fr_service.list_person_faces(coincidence['cloud_rf_id'])
 
         return jsonify(status=StatusMsg.OK, message=SuccessMsg.READED, data=response)
 
@@ -550,3 +564,4 @@ api.add_resource(Person, '/alerta-amber/persona/<string:person_type>')
 api.add_resource(FaceRecognition, '/alerta-amber/face-recognition/')
 api.add_resource(Notification, '/alerta-amber/notifications/')
 api.add_resource(Alerts, '/alerta-amber/list/')
+api.add_resource(Alert, '/alerta-amber/alerta/')
