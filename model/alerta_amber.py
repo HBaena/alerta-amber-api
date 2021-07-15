@@ -259,3 +259,23 @@ class AlertaAmber(Model):
                 "alerta_id",  "lat_consulta",  "lng_consulta", "cloud_rf_id", 
                 "probabilidad",  "lat_extravio", "lng_extravio", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion", "extravio_id")
         return self.execute(query, data, formatting=lambda response: response_to_dict(response, columns), **kwargs)
+
+
+    def read_alert(self, data, **kwargs):
+        query = """
+            SELECT 
+                public.ST_Y(public.ST_TRANSFORM(al.coord ,4326)), 
+                public.ST_X(public.ST_TRANSFORM(al.coord ,4326)),
+                al.cloud_rf_id, 
+                encode(al.foto_consulta , 'base64'),
+                cast(al.probabilidad*100 as float),
+                to_char(e.fecha, 'DD/MM/YYYY'), 
+                e.carpeta_investigacion 
+            FROM alerta_localizacion al
+            LEFT JOIN usuario u ON u.usuario_id=al.usuario_id
+            LEFT JOIN extravio e ON e.extravio_id=al.extravio_id
+            WHERE al.alerta_id = 35
+        """ 
+        columns = ("lat_consulta",  "lng_consulta", "cloud_rf_id", "foto_consulta", 
+                "probabilidad", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion", "extravio_id")
+        return self.execute(query, data, formatting=lambda response: response_to_dict(response, columns)[0], **kwargs)
