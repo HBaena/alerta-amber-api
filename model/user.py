@@ -77,3 +77,24 @@ class User(Model):
         return self.execute(
                 query, (zone, ), commit=True, 
                 formatting=lambda response: response_to_dict(response, columns))
+
+
+    def add_jwt(self, token, **kwargs):
+        query = """
+            INSERT INTO jwt ("TOKEN") VALUES (%s)        
+        """
+        return self.execute(query, (token, ), commit=True, **kwargs)
+
+    def delete_jwt(self, token, **kwargs):
+        query = """
+            DELETE FROM jwt 
+            WHERE "TOKEN"=%s
+        """
+        return self.execute(query, (token, ), commit=True, **kwargs)
+
+    def validate_token_activo(self, token, **kwargs):
+        query = """
+            SELECT * FROM jwt
+            WHERE "TOKEN"=%s
+        """
+        return self.execute(query, (token, ), commit=True, **kwargs)
