@@ -270,6 +270,7 @@ class AlertaAmber(Model):
                 encode(al.foto_consulta , 'base64'),
                 cast(al.probabilidad*100 as float),
                 to_char(e.fecha, 'DD/MM/YYYY'), 
+                to_char(al.fecha, 'DD/MM/YYYY'), 
                 e.carpeta_investigacion 
             FROM alerta_localizacion al
             LEFT JOIN usuario u ON u.usuario_id=al.usuario_id
@@ -277,5 +278,5 @@ class AlertaAmber(Model):
             WHERE al.alerta_id = %s
         """ 
         columns = ("lat_consulta",  "lng_consulta", "cloud_rf_id", "foto_consulta", 
-                "probabilidad", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion", "extravio_id")
+                "probabilidad", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion")
         return self.execute(query, (idx, ), formatting=lambda response: response_to_dict(response, columns)[0], **kwargs)
