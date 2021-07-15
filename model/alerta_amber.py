@@ -63,16 +63,56 @@ class AlertaAmber(Model):
 
     def read_person(self, idx: int, **kwargs) -> Union[tuple, None]:
         query = """
-            SELECT p.*, f.url_foto FROM persona p 
-            left join registro_rf rr on rr.persona_id=p.persona_id
-            left join foto f on f.registro_rf_id=rr.registro_rf_id
-            WHERE p.persona_id = %s and rr.tipo=0 limit 1
+            SELECT
+                p.persona_id as persona_id, 
+                curp as CURP, 
+                nombre as nombre, 
+                ap_paterno as apellido_paterno, 
+                ap_materno as apellido_materno,
+                to_char(p.fecha_nacimiento, 'DD/MM/YYYY') as fecha,
+                cast(estatura as float) as estatura , 
+                cast(peso as float) as peso,
+                senas_particulares as senas_particulares, 
+                padecimientos as padecimientos,
+                sexo.descripcion as sexo, 
+                complexion.descripcion as complexion, 
+                tez.descripcion as tez, 
+                cara_contorno.descripcion as cara_contorno, 
+                cabello.descripcion as cabello, 
+                cejas.descripcion as cejas, 
+                ojos.descripcion as ojos, 
+                nariz.descripcion as nariz, 
+                boca.descripcion as boca, 
+                labios.descripcion as labios, 
+                menton.descripcion as menton, 
+                orejas.descripcion as orejas, 
+                pomulos.descripcion as pomulos, 
+                barba.descripcion as barba, 
+                bigote.descripcion as bigote,
+                f.url_foto as url_foto
+            FROM persona p
+            LEFT JOIN cat_sexo sexo ON  sexo.sexo_id = p.sexo_id
+            LEFT JOIN cat_complexion complexion ON  complexion.complexion_id = p.complexion_id
+            LEFT JOIN cat_tez tez ON  tez.tez_id = p.tez_id
+            LEFT JOIN cat_cara cara_contorno ON  cara_contorno.cara_contorno_id = p.cara_contorno_id
+            LEFT JOIN cat_cabello cabello ON  cabello.cabello_id = p.cabello_id
+            LEFT JOIN cat_cejas cejas ON  cejas.cejas_id = p.cejas_id
+            LEFT JOIN cat_ojos ojos ON  ojos.ojos_id = p.ojos_id
+            LEFT JOIN cat_nariz nariz ON  nariz.nariz_id = p.nariz_id
+            LEFT JOIN cat_boca boca ON  boca.boca_id = p.boca_id
+            LEFT JOIN cat_labios labios ON  labios.labios_id = p.labios_id
+            LEFT JOIN cat_menton menton ON  menton.menton_id = p.menton_id
+            LEFT JOIN cat_orejas orejas ON  orejas.orejas_id = p.orejas_id
+            LEFT JOIN cat_pomulos pomulos ON  pomulos.pomulos_id = p.pomulos_id
+            LEFT JOIN cat_barba barba ON  barba.barba_id = p.barba_id
+            LEFT JOIN cat_bigote bigote ON  bigote.bigote_id = p.bigote_id
+            LEFT JOIN registro_rf rr ON rr.persona_id=p.persona_id
+            LEFT JOIN foto f ON f.registro_rf_id=rr.registro_rf_id
+            WHERE p.persona_id = %s AND rr.tipo=0 LIMIT 1
         """
-        columns = (
-                "ID_PERSONA", "CURP", "NOMBRE", "AP_PATERNO", "AP_MATERNO", "SEXO_ID", "FECHA_NACIMIENTO", "ESTATURA", "PESO", 
-                "COMPLEXION_ID", "TEZ_ID", "CARA_CONTORNO_ID", "CABELLO_ID", "CEJAS_ID", "OJOS_ID", "NARIZ_ID", 
-                "BOCA_ID", "LABIOS_ID", "MENTON_ID", "OREJAS_ID", "POMULOS_ID", "BARBA_ID", "BIGOTE_ID", 
-                "SENAS_PARTICULARES", "PADECIMIENTOS", "URL_FOTO")
+        columns = ( "PERSONA_ID", "CURP", "NOMBRE", "APELLIDO_PATERNO", "APELLIDO_MATERNO", "FECHA", "ESTATURA", 
+            "PESO", "SENAS_PARTICULARES", "PADECIMIENTOS", "SEXO", "COMPLEXION", "TEZ", "CARA_CONTORNO", 
+            "CABELLO", "CEJAS", "OJOS", "NARIZ", "BOCA", "LABIOS", "MENTON", "OREJAS", "POMULOS", "BARBA", "BIGOTE", "URL_FOTO", )
         return self.execute(query, (idx, ), formatting=lambda response: response_to_dict(response, columns), cursor_=kwargs.get('cursor', None))
 
 
@@ -176,7 +216,7 @@ class AlertaAmber(Model):
             LEFT JOIN foto f ON rf.registro_rf_id = f.registro_rf_id 
             WHERE rf.persona_id=%s AND tipo=%s
         """
-        columns = ('registro_rf_id', 'tipo', 'persona_id', 'foto', 'url_foto')
+        columns = ('REGISTRO_RF_ID', 'TIPO', 'PERSONA_ID', 'FOTO', 'URL_FOTO')
         return self.execute(query, (idx, person_type), 
             formatting=lambda response: response_to_dict(response, columns), **kwargs)
 
@@ -260,8 +300,8 @@ class AlertaAmber(Model):
             ORDER BY e.fecha DESC
         """ 
         columns = (
-                "alerta_id", "persona_id", "nombre", "ap_paterno" , "ap_materno" ,"lat_consulta",  "lng_consulta", "cloud_rf_id", 
-                "probabilidad",  "lat_extravio", "lng_extravio", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion", "extravio_id")
+                "ALERTA_ID", "PERSONA_ID", "NOMBRE", "AP_PATERNO" , "AP_MATERNO" ,"LAT_CONSULTA",  "LNG_CONSULTA", "CLOUD_RF_ID", 
+                "PROBABILIDAD",  "LAT_EXTRAVIO", "LNG_EXTRAVIO", "FECHA_DESAPARICION", "FECHA_CONSULTA", "CARPETA_INVESTIGACION", "EXTRAVIO_ID")
         return self.execute(query, data, formatting=lambda response: response_to_dict(response, columns), **kwargs)
 
 
@@ -281,7 +321,7 @@ class AlertaAmber(Model):
             LEFT JOIN extravio e ON e.extravio_id=al.extravio_id
             WHERE al.alerta_id = %s
         """ 
-        columns = ("lat_consulta",  "lng_consulta", "cloud_rf_id", "foto_consulta", 
-                "probabilidad", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion")
+        columns = ("LAT_CONSULTA",  "LNG_CONSULTA", "CLOUD_RF_ID", "FOTO_CONSULTA", 
+                "PROBABILIDAD", "FECHA_DESAPARICION", "FECHA_CONSULTA", "CARPETA_INVESTIGACION")
         return self.execute(query, (idx, ), formatting=lambda response: response_to_dict(response, columns)[0] if response else None, 
             **kwargs)
