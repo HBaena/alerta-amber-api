@@ -450,6 +450,7 @@ class CloseReport(Resource):
             x, y = coord.split(',')
             data['COORD_X'] =  float(y)
             data['COORD_Y'] =  float(x)
+        validate_datetime_from_form(data, 'fecha')
         idx_close_report = aa_model.close_report(idx, data, cursor_=cursor)
         if not idx_close_report:
             connection.rollback()
