@@ -474,7 +474,8 @@ class FaceRecognition(Resource):
             data['foto_consulta'] = photo
             data['extravio_id'] = temp['EXTRAVIO_ID']
             data['fecha'] = datetime.today()
-            ic(aa_model.create_alert(data, cursor_=cursor))
+            alerta_id = aa_model.create_alert(data, cursor_=cursor)
+            temp['ALERTA_ID'] = alerta_id
             response.append(temp)
         connection.commit()
         aa_model.release_connection(connection)
@@ -488,10 +489,9 @@ class Alert(Resource):
         response = aa_model.read_alert(idx)
         if not response:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.NO_EXISTS_INFO)
-
-        fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
-        fr_data = fr_service.list_person_faces(response['cloud_rf_id'])
-        response['fotos_db'] = fr_data
+        # fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
+        # fr_data = fr_service.list_person_faces(response['cloud_rf_id'])
+        # response['fotos_db'] = fr_data
         return jsonify(status=StatusMsg.OK, message=SuccessMsg.READED, data=response)
 
 
@@ -505,7 +505,7 @@ class Alerts(Resource):
         response = aa_model.read_alerts_by_zone(data)
         if not response: 
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.NO_EXISTS_INFO)
-        fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
+        # fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
         # for coincidence in response:
         #     ic(coincidence['cloud_rf_id'])
         #     coincidence['fotos_db'] = fr_service.list_person_faces(coincidence['cloud_rf_id'])
