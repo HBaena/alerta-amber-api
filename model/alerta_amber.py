@@ -327,10 +327,24 @@ class AlertaAmber(Model):
             **kwargs)
 
 
-    def close_report(self, idx, **kwargs):
+    def close_report(self, idx, data,**kwargs):
         query = """
             UPDATE extravio SET localizado=1
             WHERE extravio_id=%s
+            RETURNING extravio_id
         """
-        return self.execute(query, (idx, ), commit=True, **kwargs)
-
+        extravio_id = self.execute(query, (idx, ), commit=True, formatting=lambda response: response[0][0], **kwargs)
+        if not extravio_id:
+            return None
+        data['extravio_id'] = extravio_id
+        query = """
+            INSERT INTO localizacion (
+                extravio_id, estado, municipio, colonia, calle, numero, coord, 
+                finado, sospechoso, fecha, encontro_usuario_id
+            ) VALUES (
+                %(extravio_id)s, %(estado)s, %(municipio)s, %(colonia)s, %(calle)s, %(numero)s, 
+                public.ST_GeomFromText('POINT(%(COORD_X)s %(COORD_Y)s)', 4326), 
+                %(finado)s, %(sospechoso)s, %(fecha)s, %(encontro_usuario_id)s
+            ) RETURNING localizacion_id
+        """
+        return self.execute(query, data, commit=True, formatting=lambda response: response[0][0], **kwargs)
