@@ -442,7 +442,22 @@ class Report(Resource):
 
 class CloseReport(Resource):
     def post(self, idx):
-        ...
+        connection = aa_model.get_connection(autocommit=False)
+        cursor = connection.cursor()
+        data = defaultdict(lambda: None, request.form)
+        coord = request.form.get('coord')
+        if coord:
+            x, y = coord.split(',')
+            data['COORD_X'] =  float(y)
+            data['COORD_Y'] =  float(x)
+        idx_close_report = aa_model.close_report(idx, data, cursor_=cursor)
+        if not idx_close_report:
+            connection.rollback()
+            aa_model.release_connection(connection)
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CREATING_ERROR)
+        connection.commit()
+        aa_model.release_connection(connection)
+        return jsonify(status=StatusMsg.OK, message=SuccessMsg.CREATED, folio=idx_close_report)
 
 
 
@@ -578,7 +593,7 @@ api.add_resource(Token, '/alerta-amber/user/refresh-token/')
 api.add_resource(Login, '/alerta-amber/user/login/')
 api.add_resource(Logout, '/alerta-amber/user/logout/')
 api.add_resource(Report, '/alerta-amber/reporte/')
-api.add_resource(CloseReport, '/alerta-amber/reporte/close/<int:idx>')
+api.add_resource(CloseReport, '/alerta-amber/reporte/<int:idx>/cerrar/')
 api.add_resource(Person, '/alerta-amber/persona/<string:person_type>')
 api.add_resource(FaceRecognition, '/alerta-amber/face-recognition/')
 api.add_resource(Notification, '/alerta-amber/notifications/')
