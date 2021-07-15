@@ -325,3 +325,12 @@ class AlertaAmber(Model):
                 "PROBABILIDAD", "FECHA_DESAPARICION", "FECHA_CONSULTA", "CARPETA_INVESTIGACION")
         return self.execute(query, (idx, ), formatting=lambda response: response_to_dict(response, columns)[0] if response else None, 
             **kwargs)
+
+
+    def close_report(self, idx, **kwargs):
+        query = """
+            UPDATE extravio SET localizado=1
+            WHERE extravio_id=%s
+        """
+        return self.execute(query, (idx, ), commit=True, **kwargs)
+

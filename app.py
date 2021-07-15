@@ -124,7 +124,7 @@ def jwt_required_in_db():
 
 
 class Index(Resource):
-    # @jwt_required_in_db()
+    @jwt_required_in_db()
     def get(self):
         """
         Function: get
@@ -266,10 +266,21 @@ class Login(Resource):
             access_token = create_access_token(identity=data['email'])
             refresh_token = create_refresh_token(identity=data['email'])
             del user['CONTRASENA']
+            ic(user_model.add_jwt(access_token))
             return jsonify(status=StatusMsg.OK, message='Login successfully', user_data=user,
                     access_token=access_token, refresh_token=refresh_token)
         else:
             return jsonify(status=StatusMsg.FAIL, message=ErrorMsg.WRONG_PASSWORD, error=ErrorMsg.WRONG_PASSWORD)
+
+
+class Logout(Resource):
+    @jwt_required_in_db()
+    def delete(self):
+        token = request.headers['Authorization'][7:]
+        if not user_model.delete_jwt(token):
+            return jsonify(dict(status=StatusMsg.FAIL))
+        else:
+            return jsonify(status=StatusMsg.OK)
 
 
 class Person(Resource):
@@ -429,6 +440,12 @@ class Report(Resource):
         ...
 
 
+class CloseReport(Resource):
+    def post(self, idx):
+        ...
+
+
+
 class FaceRecognition(Resource):
 
     def post(self):
@@ -559,7 +576,9 @@ api.add_resource(User, '/alerta-amber/user/')
 api.add_resource(Users, '/alerta-amber/users/list/')
 api.add_resource(Token, '/alerta-amber/user/refresh-token/')
 api.add_resource(Login, '/alerta-amber/user/login/')
+api.add_resource(Logout, '/alerta-amber/user/logout/')
 api.add_resource(Report, '/alerta-amber/reporte/')
+api.add_resource(CloseReport, '/alerta-amber/reporte/close/<int:idx>')
 api.add_resource(Person, '/alerta-amber/persona/<string:person_type>')
 api.add_resource(FaceRecognition, '/alerta-amber/face-recognition/')
 api.add_resource(Notification, '/alerta-amber/notifications/')
