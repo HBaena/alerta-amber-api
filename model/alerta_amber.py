@@ -261,7 +261,7 @@ class AlertaAmber(Model):
         return self.execute(query, data, formatting=lambda response: response_to_dict(response, columns), **kwargs)
 
 
-    def read_alert(self, data, **kwargs):
+    def read_alert(self, idx, **kwargs):
         query = """
             SELECT 
                 public.ST_Y(public.ST_TRANSFORM(al.coord ,4326)), 
@@ -274,8 +274,8 @@ class AlertaAmber(Model):
             FROM alerta_localizacion al
             LEFT JOIN usuario u ON u.usuario_id=al.usuario_id
             LEFT JOIN extravio e ON e.extravio_id=al.extravio_id
-            WHERE al.alerta_id = 35
+            WHERE al.alerta_id = %s
         """ 
         columns = ("lat_consulta",  "lng_consulta", "cloud_rf_id", "foto_consulta", 
                 "probabilidad", "fecha_desaparicion", "fecha_consulta", "carpeta_investigacion", "extravio_id")
-        return self.execute(query, data, formatting=lambda response: response_to_dict(response, columns)[0], **kwargs)
+        return self.execute(query, (idx, ), formatting=lambda response: response_to_dict(response, columns)[0], **kwargs)
