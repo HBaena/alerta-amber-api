@@ -513,7 +513,6 @@ class FaceRecognition(Resource):
             data['COORD_X'] =  float(y)
             data['COORD_Y'] =  float(x)
         data['usuario_id'] = usuario_id
-        ic(data)
         if not request.files.get('foto'):
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto'))
         photo = request.files.get('foto').read()
@@ -521,13 +520,11 @@ class FaceRecognition(Resource):
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto'))
         
         fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
-        ic(fr_service)
         coincidences = fr_service.recognize(photo, deep=bool(deep))        
         if not coincidences:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NO_COINCIDENCE)
         
         coincidences = tuple(filter(lambda item: item['name'][0].isdigit(), coincidences))
-        ic(coincidences)
         if not coincidences:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NO_COINCIDENCE)
 
@@ -536,14 +533,16 @@ class FaceRecognition(Resource):
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CONNECTION_ERROR)
         cursor = connection.cursor()
         response = list()
-        ic(coincidences)
         for coincidence in coincidences:
             data['cloud_rf_id'] = coincidence['id']
             data['probabilidad'] = coincidence['probability']
+            ic(coincidence['name'])
+            ic(coincidence['name'].split('/'))
             temp = aa_model.get_coincidences_info(*coincidence['name'].split('/'), cursor_=cursor)
             if not temp:
                 aa_model.release_connection(connection)
                 return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CONNECTION_ERROR, log='reading')
+            ic() 
             data['foto_consulta'] = photo
             data['extravio_id'] = temp['EXTRAVIO_ID']
             data['fecha'] = datetime.today()
