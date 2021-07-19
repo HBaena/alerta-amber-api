@@ -545,7 +545,7 @@ class FaceRecognition(Resource):
 
 
 class FaceVerification(Resource):
-    def post(self, usuario_id):
+    def post(self):
         cloud_rf_id = request.form.get("cloud_rf_id")
         if not request.files.get('foto') or not cloud_rf_id:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto, cloud_rf_id'))
@@ -556,7 +556,8 @@ class FaceVerification(Resource):
         fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
 
         verified = fr_service.verify(cloud_rf_id, photo)
-        if not verified:
+        ic(verified)
+        if not verified or verified.get('status') == 'failure':
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NOT_VERIFIED)
         # IF VERIFIED
         return jsonify(status=StatusMsg.OK, message=FaceRecognitionMsg.VERIFIED)
@@ -644,7 +645,7 @@ api.add_resource(Report, '/alerta-amber/reporte/')
 api.add_resource(CloseReport, '/alerta-amber/reporte/<int:idx>/cerrar/')
 api.add_resource(Person, '/alerta-amber/persona/<string:person_type>')
 api.add_resource(FaceRecognition, '/alerta-amber/face-recognition/')
-api.add_resource(FaceVerification, '/alerta-amber/face-verification/<int:usuario_id>')
+api.add_resource(FaceVerification, '/alerta-amber/face-verification/')
 api.add_resource(Notification, '/alerta-amber/notifications/')
 api.add_resource(Alerts, '/alerta-amber/list/')
 api.add_resource(Alert, '/alerta-amber/alerta/')
