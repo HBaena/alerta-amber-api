@@ -10,6 +10,7 @@ class ErrorMsg():
     ROUTE_ERROR = 'endpoint_error'
     NEEDED_VALUES = '[{}] need value(s)'
     FR_SERVICE_ERROR = 'fr_service_fails'
+    UNKNOWN_ERROR = 'unknown_error'
 
 class RouteErrorMsg():
     ARG_ERROR = 'endpoint_argument_unexpected'
@@ -39,3 +40,6 @@ class PersonType():
 class FaceRecognitionMsg():
     COINCIDENCE = "possible_coincidence"
     NO_COINCIDENCE = "no_coincidence"
+    NOT_VERIFIED = "face_verification_fails"
+    VERIFIED = "verified_successfully"
+    UPLOAD_ERROR = "error_while_uplading_photo"
