@@ -7,3 +7,5 @@ threads = 1
 worker_connections = 1000  # Or more deppending the number or simultaneously clients
 # worker_class = 'gevent'
 worker_class = 'eventlet'  # testing both for performance
+timeout = 20  # Time that a worker lives after a request
+keepalive = 5
