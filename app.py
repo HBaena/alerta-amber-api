@@ -168,6 +168,12 @@ class User(Resource):
         Php endpoint: usuario_registro_cn_post
         Returns: Message, access_tokens and id
         """
+        if not request.files.get('foto'):
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto'))
+        photo = request.files.get('foto').read()
+        if photo == b'':
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto'))
+
         form = request.form
         data = {
             'email': form.get('email'), 
@@ -179,13 +185,34 @@ class User(Resource):
             'notificaciones_device_id': form.get('notificaciones_device_id'), 
         }
         # TODO: verify nulls
-        user = user_model.read_user(data['email'])
+        connection = aa_model.get_connection(autocommit=False)
+        cursor = connection.cursor()
+
+        user = user_model.read_user(data['email'], cursor_=cursor)
         if user:
             return jsonify(status=StatusMsg.FAIL, message=DBErrorMsg.USER_EXISTS, error=ErrorMsg.DB_ERROR)
+
+        fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
+        response_rf =  fr_service.add_person(f"usuario/{data['email']}", photo)
+
+        if not response_rf:
+            connection.rollback()
+            aa_model.release_connection(connection)
+            return jsonify(status=StatusMsg.FAIL, message=FaceRecognitionMsg.UPLOAD_ERROR, error=ErrorMsg.FR_SERVICE_ERROR)
+
         data['contrasena'] = encript_password(data['contrasena'])  # password 
-        user_id = user_model.create_user(data)
+        data['rf_cloud_id'] = response_rf.get('id')
+
+        user_id = user_model.create_user(data, cursor_=cursor)
+
+
         if not user_id:
-            return dict(status=StatusMsg.FAIL, message=DBErrorMsg.CREATING_ERROR, error=ErrorMsg.DB_ERROR)
+            connection.rollback()
+            aa_model.release_connection(connection)
+            return jsonify(status=StatusMsg.FAIL, message=DBErrorMsg.CREATING_ERROR, error=ErrorMsg.DB_ERROR)
+
+        connection.commit()
+        aa_model.release_connection(connection)
         return jsonify(
                 message=SuccessMsg.CREATED,
                 status= StatusMsg.OK, 
@@ -267,6 +294,7 @@ class Login(Resource):
             refresh_token = create_refresh_token(identity=data['email'])
             del user['CONTRASENA']
             ic(user_model.add_jwt(access_token))
+
             return jsonify(status=StatusMsg.OK, message='Login successfully', user_data=user,
                     access_token=access_token, refresh_token=refresh_token)
         else:
@@ -516,6 +544,25 @@ class FaceRecognition(Resource):
         return jsonify(status=StatusMsg.OK, coincidences=response, message=FaceRecognitionMsg.COINCIDENCE)
 
 
+class FaceVerification(Resource):
+    def post(self, usuario_id):
+        cloud_rf_id = request.form.get("cloud_rf_id")
+        if not request.files.get('foto') or not cloud_rf_id:
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto, cloud_rf_id'))
+        photo = request.files.get('foto').read()
+        if photo == b'':
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.MISSING_VALUES, message=ErrorMsg.NEEDED_VALUES.format('foto'))
+
+        fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
+
+        verified = fr_service.verify(cloud_rf_id, photo)
+        if not verified:
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NOT_VERIFIED)
+        # IF VERIFIED
+        return jsonify(status=StatusMsg.OK, message=FaceRecognitionMsg.VERIFIED)
+
+
+
 class Alert(Resource):
     def get(self):
         idx = request.args.get('idx')
@@ -597,6 +644,15 @@ api.add_resource(Report, '/alerta-amber/reporte/')
 api.add_resource(CloseReport, '/alerta-amber/reporte/<int:idx>/cerrar/')
 api.add_resource(Person, '/alerta-amber/persona/<string:person_type>')
 api.add_resource(FaceRecognition, '/alerta-amber/face-recognition/')
+api.add_resource(FaceVerification, '/alerta-amber/face-verification/<int:usuario_id>')
 api.add_resource(Notification, '/alerta-amber/notifications/')
 api.add_resource(Alerts, '/alerta-amber/list/')
 api.add_resource(Alert, '/alerta-amber/alerta/')
+
+
+# @app.errorhandler(Exception)
+# def handle_exception(e):
+#         if pool.pool.closed:
+#             initialize()
+#             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CONNECTION_ERROR)
+#         return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.UNKNOWN_ERROR, message=str(e))

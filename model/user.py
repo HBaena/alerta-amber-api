@@ -15,35 +15,41 @@ class User(Model):
         self.pool = pool
         self.user_table = 'usuario'
 
-    def read_user(self, email: str) -> Union[None, tuple]:
+    def read_user(self, email: str, **kwargs) -> Union[None, tuple]:
         query = """
-            SELECT * FROM {}
-            WHERE "email"=%s
+        SELECT 
+            u.*,
+            public.ST_Y(public.ST_TRANSFORM(zv.coord ,4326)), 
+            public.ST_X(public.ST_TRANSFORM(zv.coord ,4326))
+        FROM usuario u 
+        LEFT JOIN zona_verifacion zv ON zv.zona_id=u.zona
+        WHERE "email"=%s
         """.format(self.user_table)
-        columns = ('USUARIO_ID', 'EMAIL', 'TELEFONO', 'NOMBRE', 'NO EMPLEADO', 'CONTRASENA', 'ZONA', 'NOTIFICACIONES_DEVICE_ID', 'ROL')
+        columns = ('USUARIO_ID', 'EMAIL', 'TELEFONO', 'NOMBRE', 'NO EMPLEADO', 'CONTRASENA', 'ZONA', 'NOTIFICACIONES_DEVICE_ID', 
+            'ROL', 'CLOUD_RF_ID','LAT_ZONA', "LNG_ZONA")
 
         return self.execute(
                 query, (email,), commit=True, 
-                formatting=lambda response: response_to_dict(response, columns))
+                formatting=lambda response: response_to_dict(response, columns), **kwargs)
 
-    def create_user(self, data: dict) -> int:
+    def create_user(self, data: dict, **kwargs) -> int:
         query = """
             INSERT INTO {} 
             (
                 "email", "telefono", "nombre", 
-                "no_empleado", "contrasena"
+                "no_empleado", "contrasena", "rf_cloud_id"
             )
             VALUES
             (
                 %(email)s, %(telefono)s, %(nombre)s, 
-                %(no_empleado)s, %(contrasena)s
+                %(no_empleado)s, %(contrasena)s, %(rf_cloud_id)s
             )
             RETURNING "usuario_id"
         """.format(self.user_table)
-        return  self.execute(query, data, commit=True, formatting=lambda response: response[0][0])
+        return  self.execute(query, data, commit=True, formatting=lambda response: response[0][0], **kwargs)
             
             
-    def jwt_update(self, jwt_token_old: str, jwt_token_new: str) -> int:
+    def jwt_update(self, jwt_token_old: str, jwt_token_new: str, **kwargs) -> int:
         query = """
             UPDATE public."JWT"
             SET "TOKEN" = %s

@@ -268,7 +268,7 @@ class AlertaAmber(Model):
             INSERT INTO alerta_localizacion (
                 "extravio_id", "coord", "cloud_rf_id", "usuario_id", "foto_consulta", "probabilidad", "fecha"
             ) VALUES (
-                %(extravio_id)s, public.ST_GeomFromText('POINT(%(COORD_X)s %(COORD_Y)s)', 4326), 
+                %(extravio_id)s,    , 
                 %(cloud_rf_id)s, %(usuario_id)s, %(foto_consulta)s, %(probabilidad)s, %(fecha)s
             ) RETURNING "alerta_id"
         """
