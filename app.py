@@ -186,6 +186,8 @@ class User(Resource):
         }
         # TODO: verify nulls
         connection = aa_model.get_connection(autocommit=False)
+        if not connection:
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CONNECTION_ERROR)
         cursor = connection.cursor()
 
         user = user_model.read_user(data['email'], cursor_=cursor)
@@ -471,6 +473,8 @@ class Report(Resource):
 class CloseReport(Resource):
     def post(self, idx):
         connection = aa_model.get_connection(autocommit=False)
+        if not connection:
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CONNECTION_ERROR)
         cursor = connection.cursor()
         data = defaultdict(lambda: None, request.form)
         coord = request.form.get('coord')
@@ -526,14 +530,20 @@ class FaceRecognition(Resource):
         ic(coincidences)
         if not coincidences:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NO_COINCIDENCE)
-        connection = aa_model.get_connection()
+
+        connection = aa_model.get_connection(autocommit=False)
+        if not connection:
+            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CONNECTION_ERROR)
         cursor = connection.cursor()
         response = list()
-        ic()
+        ic(coincidences)
         for coincidence in coincidences:
             data['cloud_rf_id'] = coincidence['id']
             data['probabilidad'] = coincidence['probability']
             temp = aa_model.get_coincidences_info(*coincidence['name'].split('/'), cursor_=cursor)
+            if not temp:
+                aa_model.release_connection(connection)
+                return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CONNECTION_ERROR, log='reading')
             data['foto_consulta'] = photo
             data['extravio_id'] = temp['EXTRAVIO_ID']
             data['fecha'] = datetime.today()
