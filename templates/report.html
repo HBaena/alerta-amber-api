@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="pdfkit-page-size" content="Legal"/>
+    <meta name="pdfkit-orientation" content="Landscape"/>    
+    <title></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</head>
+
+<body>
+<div class="container" style="width: 100%; padding: 10px;">
+    <div class="row" style="color: #b71c1c">
+        <div class="col l2" style="margin-top: 3rem;">
+            <img class="responsive-img" src="data:image/jpg;base64, {{logo_amber}}">
+        </div>
+        <div class="col l8">
+            <h3 class="center-align">¡BOLETÍN DE URGENCIA!</h3>
+            <h5 class="center-align">PERSONA NO LOCALIZADA, AYÚDANOS A ENCONTRARLA</h2>
+        </div>
+        <div class="col l2 valign-wrapper">
+            <img class="responsive-img" src="data:image/jpg;base64, {{logo_jalisco}}">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col l3">
+            <img class="responsive-img" src="data:image/jpg;base64, {{persona['foto']}}">
+            <h4 class="center-align"><b>{{persona['nombre']}}</b></h4>
+        </div>
+        <div class="col l8">
+            <div class="row">
+                    <div class="col l12">
+                        <b>FOLIO:</b> {{persona['folio']}}
+                    </div>
+
+                    <div class="col l8">
+                        <b>EDAD AL DESAPARECER:</b> {{persona['edad_desaparecer']}}
+                    </div>
+                    <div class="col l4">
+                        <b>SEXO:</b> {{persona['sexo']}}
+                    </div>
+                    <div class="col l8">
+                        <b>FECHA DE NACIMIENTO:</b> {{persona['fecha_nacimiento']}}
+                    </div>
+                    <div class="col l4">
+                        <b>F. AUSENCIA:</b> {{persona['fecha_extravio']}}
+                    </div>
+                    <div class="col l8">
+                        <b>ESTATURA:</b> {{persona['estatura']}}
+                    </div>
+                    <div class="col l4">
+                        <b>PESO:</b> {{persona['peso']}}
+                    </div>
+
+                    <div class="col l8">
+                        <b>COMPLEXION:</b> {{persona['complexion']}}
+                    </div>
+                    <div class="col l4">
+                        <b>TEZ:</b> {{persona['tez']}}
+                    </div>
+
+                    <div class="col l8">
+                        <b>CARA:</b> {{persona['cara']}}
+                    </div>
+                    <div class="col l4">
+                        <b>FRENTE:</b> {{persona['frente']}}
+                    </div>
+
+                    <div class="col l8">
+                        <b>CABELLO:</b> {{persona['cabello']}}
+                    </div>
+                    <div class="col l4">
+                        <b>CEJAS:</b> {{persona['cejas']}}
+                    </div>
+
+                    <div class="col l4">
+                        <b>NARIZ:</b> {{persona['nariz']}}
+                    </div>
+                    <div class="col l4">
+                        <b>BOCA:</b> {{persona['boca']}}
+                    </div>
+                    <div class="col l4">
+                        <b>LABIOS:</b> {{persona['labios']}}
+                    </div>
+                    <div class="col l8">
+                        <b>OREJAS:</b> {{persona['orejas']}}
+                    </div>
+                    <div class="col l4">
+                        <b>PÓMULOS:</b> {{persona['pomulos']}}
+                    </div>
+                    <div class="col l8">
+                        <b>MENTÓN:</b> {{persona['menton']}}
+                    </div>
+                    <div class="col l4">
+                        <b>OJOS:</b> {{persona['ojos']}}
+                    </div>
+
+                    <div class="col l8">
+                        <b>BIGOTE:</b> {{persona['bigote']}}
+                    </div>
+                    <div class="col l4">
+                        <b>TEZ:</b> {{persona['tez']}}
+                    </div>
+
+                        <div class="col l12"><b>LUGAR DE EXTRAVIO</b></div>
+                        <div class="col l12">{{persona['lugar_extravio']}}</div>
+                        <div class="col l12"><b>DESCRIPCION DE LOS HECHOS</b></div>
+                        <div class="col l12">{{persona['hechos']}}</div>
+                        <div class="col l12"><b>SEÑAS PARTICULARES</b></div>
+                        <div class="col l12">{{persona['sena_particulares']}}</div>
+                        <div class="col l12"><b>PADECIMIENTOS</b></div>
+                        <div class="col l12">{{persona['padecimientos']}}</div>
+                        <div class="col l12"><b>VESTIMENTA Y CALZADO</b></div>
+                        <div class="col l12">{{persona['vestimenta']}}</div>
+
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col l2"></div>
+        <div class="col l10">
+            <div class="row red darken-4">
+                <div class="col l5 ">
+                    <h5 class="white-text center-align">Lada sin costo</h5>
+                    <h3 class="white-text center-align">800 89 029 40</h3>
+
+                </div>
+                <div class="col l7">
+                    <h5 class="white-text center-align">Ex et amet ut ad. Lorem ipsum sed consequat in deserunt ullamco.</h5>
+                    <h6 class="white-text center-align">Non adipisicing velit aliqua laborum cupidatat ut dolor cupidatat anim in commodo ut ut in ullamco ex.</h6>
+                    <h6 class="white-text center-align"><b>Amet cillum in in ad. Reprehenderit proident eu.</b></h6>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
