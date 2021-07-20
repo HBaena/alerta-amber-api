@@ -2,6 +2,9 @@ from flask import request  # Flask, receiving data from requests, json handling
 from flask import send_file  # Create url from statics files
 from flask import jsonify  # Flask, receiving data from requests, json handling
 from flask import after_this_request  
+from flask import render_template
+from flask import url_for
+
 from flask_restful import Resource  # modules for fast creation of apis
 
 from config import app
@@ -9,6 +12,11 @@ from config import api
 from config import jwt
 from config import connect_to_db_from_json
 from config import init_notification_manager
+from config import pdf_options
+
+from config import logo_amber_b64
+from config import logo_jalisco_b64
+
 
 from model.user import User as UserModel 
 from model.alerta_amber import AlertaAmber
@@ -37,6 +45,8 @@ from functions import validate_datetime_from_form
 from face_recognition import FaceRecognitionService
 
 from collections import defaultdict
+from imgkit import from_string as poster_from_string
+
 
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import create_refresh_token
@@ -660,6 +670,31 @@ api.add_resource(FaceVerification, '/alerta-amber/face-verification/')
 api.add_resource(Notification, '/alerta-amber/notifications/')
 api.add_resource(Alerts, '/alerta-amber/list/')
 api.add_resource(Alert, '/alerta-amber/alerta/')
+
+
+@app.route("/alerta-amber/reporte/<int:extravio_id>/poster/")
+def poster_html(extravio_id: int):
+    # print(extravio_id)
+    persona = aa_model.read_info_for_poster(extravio_id)
+    if not persona:
+        raise Exception(DBErrorMsg.NO_EXISTS_INFO)
+    html = render_template("report.html", persona=persona[0], 
+        logo_amber=logo_amber_b64, logo_jalisco=logo_jalisco_b64)
+    return html
+
+
+@app.route("/alerta-amber/reporte/<int:extravio_id>/poster/download/")
+def poster_jpeg(extravio_id: int):
+    # print(extravio_id)
+    persona = aa_model.read_info_for_poster(extravio_id)
+    if not persona:
+        raise RouteError
+    ic(persona[0]['nombre'])
+    html = render_template("report.html", persona=persona[0], 
+        logo_amber=logo_amber_b64, logo_jalisco=logo_jalisco_b64)
+    jpeg_path = path.join(getcwd(), 'temp', f'{extravio_id}.jpeg')
+    poster_from_string(html, jpeg_path)
+    return send_file(jpeg_path, as_attachment=True)
 
 
 @app.errorhandler(Exception)
