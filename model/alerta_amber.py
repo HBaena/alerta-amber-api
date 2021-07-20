@@ -60,6 +60,64 @@ class AlertaAmber(Model):
         """.format(self.suspect_table)
         return response[0][0] if (response := self.execute(query, data, commit=True, cursor_=kwargs.get('cursor',None))) else None
 
+    def read_info_for_poster(self, extravio_id):
+        query = """
+            SELECT 
+                concat(p.nombre,' ', p.ap_paterno, ' ', p.ap_materno) as nombre,
+                ex.carpeta_investigacion as folio,
+                to_char(age(ex.fecha , p.fecha_nacimiento), 'YY años "y" MM meses') as edad_desaparecer,
+                to_char(p.fecha_nacimiento, 'DD/MM/YYYY') as fecha_nacimiento,
+                to_char(ex.fecha, 'DD/MM/YYYY') as fecha_extravio, 
+                cast(estatura as float) as estatura , 
+                cast(peso as float) as peso,
+                senas_particulares as senas_particulares, 
+                padecimientos as padecimientos,
+                sexo.descripcion as sexo, 
+                complexion.descripcion as complexion, 
+                tez.descripcion as tez, 
+                cara_contorno.descripcion as cara_contorno, 
+                cabello.descripcion as cabello, 
+                cejas.descripcion as cejas, 
+                ojos.descripcion as ojos, 
+                nariz.descripcion as nariz, 
+                boca.descripcion as boca, 
+                labios.descripcion as labios, 
+                menton.descripcion as menton, 
+                orejas.descripcion as orejas, 
+                pomulos.descripcion as pomulos, 
+                barba.descripcion as barba, 
+                bigote.descripcion as bigote,
+                encode(f.foto, 'base64') as foto,
+                ex.descripcion_hechos as hechos,
+                ex.descripcion_vestimenta as vestimenta
+            FROM persona p 
+            LEFT JOIN cat_sexo sexo ON  sexo.sexo_id = p.sexo_id
+            LEFT JOIN cat_complexion complexion ON  complexion.complexion_id = p.complexion_id
+            LEFT JOIN cat_tez tez ON  tez.tez_id = p.tez_id
+            LEFT JOIN cat_cara cara_contorno ON  cara_contorno.cara_contorno_id = p.cara_contorno_id
+            LEFT JOIN cat_cabello cabello ON  cabello.cabello_id = p.cabello_id
+            LEFT JOIN cat_cejas cejas ON  cejas.cejas_id = p.cejas_id
+            LEFT JOIN cat_ojos ojos ON  ojos.ojos_id = p.ojos_id
+            LEFT JOIN cat_nariz nariz ON  nariz.nariz_id = p.nariz_id
+            LEFT JOIN cat_boca boca ON  boca.boca_id = p.boca_id
+            LEFT JOIN cat_labios labios ON  labios.labios_id = p.labios_id
+            LEFT JOIN cat_menton menton ON  menton.menton_id = p.menton_id
+            LEFT JOIN cat_orejas orejas ON  orejas.orejas_id = p.orejas_id
+            LEFT JOIN cat_pomulos pomulos ON  pomulos.pomulos_id = p.pomulos_id
+            LEFT JOIN cat_barba barba ON  barba.barba_id = p.barba_id
+            LEFT JOIN cat_bigote bigote ON  bigote.bigote_id = p.bigote_id
+            LEFT JOIN registro_rf rr ON rr.persona_id=p.persona_id
+            LEFT JOIN foto f ON f.registro_rf_id=rr.registro_rf_id
+            INNER JOIN extraviado e ON e.persona_id=p.persona_id
+            INNER JOIN extravio ex ON ex.extravio_id =e.extravio_id  
+            where ex.extravio_id=%s limit 1
+        """
+        columns = (
+            "nombre", "folio", "edad_desaparecer", "fecha_nacimiento", "fecha_extravio", "estatura", "peso", 
+            "senas_particulares", "padecimientos", "sexo", "complexion", "tez", "cara_contorno", "cabello", 
+            "cejas", "ojos", "nariz", "boca", "labios", "menton", "orejas", "pomulos", "barba", 
+            "bigote", "foto", "hechos", "vestimenta")
+        return self.execute(query, (extravio_id, ), formatting=lambda response: response_to_dict(response, columns))
 
     def read_person(self, idx: int, **kwargs) -> Union[tuple, None]:
         query = """

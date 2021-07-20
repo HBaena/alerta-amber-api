@@ -9,11 +9,29 @@ from datetime import timedelta
 from os import path, getcwd
 from notification_manager import NotificationsManager
 
+from base64 import b64encode 
+
+
 def init_notification_manager() -> NotificationsManager:
     return NotificationsManager(path.join(getcwd(), "notifications-config.json"))
 
 def connect_to_db_from_json(filename: str) -> pool:
     return PosgresPoolConnection(path.join(getcwd(), filename))
+
+logo_amber_b64 = b64encode(open(path.join(getcwd(), 'static', 'img', 'amber-logo.png'), 'rb').read()).decode('ascii')
+logo_jalisco_b64 = b64encode(open(path.join(getcwd(), 'static', 'img', 'jalisco-logo.png'), 'rb').read()).decode('ascii')
+
+
+pdf_options = {
+    'page-size': 'Letter',
+    'margin-top': '0.1in',
+    'margin-right': '0.1in',
+    'margin-bottom': '0.1in',
+    'margin-left': '0.1in',
+    'encoding': "UTF-8",
+    'no-outline': None
+}
+
 
 # APP/SERVER
 app = Flask(__name__)  # Creating flask app
