@@ -92,7 +92,7 @@ def initialize() -> NoReturn:
     Returns: Nothing
     """
     # from pathlib import Path
-    ic()
+    from pathlib import Path
     global pool, user_model, aa_model, notification_manager
 
     pool = connect_to_db_from_json("connection.json")
@@ -100,7 +100,7 @@ def initialize() -> NoReturn:
     user_model = UserModel(pool)
     aa_model = AlertaAmber(pool)
     notification_manager = init_notification_manager()
-    # Path(path.join(getcwd(), "temp")).mkdir(parents=True, exist_ok=True)
+    Path(path.join(getcwd(), "temp")).mkdir(parents=True, exist_ok=True)
 
 @jwt.expired_token_loader
 def my_expired_token_callback(jwt_header, jwt_payload):
