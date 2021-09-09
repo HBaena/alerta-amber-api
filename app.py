@@ -558,9 +558,8 @@ class FaceRecognition(Resource):
         
         fr_service = FaceRecognitionService(path.join(getcwd(), 'luxand.json'))
         coincidences = fr_service.recognize(photo, deep=bool(deep))        
-        if not coincidences:
+        if not coincidences or (isinstance(coincidences, dict) and coincidences['status'] == 'failure'):
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NO_COINCIDENCE)
-        
         coincidences = tuple(filter(lambda item: item['name'][0].isdigit(), coincidences))
         if not coincidences:
             return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.FR_SERVICE_ERROR, message=FaceRecognitionMsg.NO_COINCIDENCE)
