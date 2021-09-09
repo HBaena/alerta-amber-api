@@ -102,6 +102,7 @@ def initialize() -> NoReturn:
     notification_manager = init_notification_manager()
     Path(path.join(getcwd(), "temp")).mkdir(parents=True, exist_ok=True)
 
+
 @jwt.expired_token_loader
 def my_expired_token_callback(jwt_header, jwt_payload):
     """
@@ -112,7 +113,33 @@ def my_expired_token_callback(jwt_header, jwt_payload):
         @param (jwt_payload):InsertHere
     Returns: estatus=token_expired
     """
-    return jsonify(estatus="token_expired", error="The token is expired", message="Token expired, try to get another one using refresh token")
+    return jsonify(estatus="token_expired", error=jwt_payload, message="Token expired, try to get another one using refresh token")
+
+
+@jwt.invalid_token_loader
+def my_invalid_token_callback(jwt_payload):
+    """
+    Function: my_expired_token_callback
+    Summary: Functions that handle usless token
+    Attributes: 
+        @param (jwt_header):InsertHere
+        @param (jwt_payload):InsertHere
+    Returns: estatus=token_expired
+    """
+    return jsonify(estatus="invalid_token", error=jwt_payload, message="Token invalid, try to get another one using refresh token")
+
+
+@jwt.unauthorized_loader
+def my_unauthorized_callback(jwt_payload):
+    """
+    Function: my_expired_token_callback
+    Summary: Functions that handle usless token
+    Attributes: 
+        @param (jwt_header):InsertHere
+        @param (jwt_payload):InsertHere
+    Returns: estatus=token_expired
+    """
+    return jsonify(estatus="unauthorized", error=jwt_payload, message="Missing Authorization header")
 
 
 def jwt_required_in_db():
@@ -699,8 +726,5 @@ def poster_jpeg(extravio_id: int):
 
 @app.errorhandler(Exception)
 def handle_exception(e):
-        ic(e)
-        if pool.pool.closed:
-            initialize()
-            return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.DB_ERROR, message=DBErrorMsg.CONNECTION_ERROR)
-        return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.UNKNOWN_ERROR, message=str(e))
+    ic(e)
+    return jsonify(status=StatusMsg.FAIL, error=ErrorMsg.UNKNOWN_ERROR, message=str(e))
